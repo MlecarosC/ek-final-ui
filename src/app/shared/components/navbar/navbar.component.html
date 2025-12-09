@@ -1,0 +1,72 @@
+<div class="navbar absolute top-0 left-0 right-0 z-50 bg-transparent text-white">
+  <div class="w-full md:w-5/6 mx-auto flex items-center justify-between px-4 md:px-0">
+    <!-- Logo -->
+    <div class="flex-1 flex items-center">
+      <a routerLink="/" class="inline-block">
+        <img 
+          [src]="logoUrl" 
+          alt="Logo" 
+          class="h-8 w-auto pointer-events-none select-none"
+          draggable="false"
+          (contextmenu)="onImageRightClick($event)"
+        >
+      </a>
+    </div>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex flex-none">
+      <ul class="menu menu-horizontal px-1">
+        @for (item of menuItems; track item.route) {
+          <li>
+            <a 
+              [routerLink]="item.route" 
+              routerLinkActive="active" 
+              class="hover:!bg-transparent hover:scale-110 transition-transform duration-200"
+            >
+              {{ item.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Mobile Menu Button & Dropdown -->
+    <div class="md:hidden relative">
+      <!-- Botón toggle -->
+      <button 
+        class="btn btn-ghost btn-square text-white"
+        (click)="toggleMobileMenu()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Menú desplegable - Solo se muestra si isMobileMenuOpen() es true -->
+      @if (isMobileMenuOpen()) {
+        <ul class="absolute right-0 top-full menu bg-base-100 rounded-box w-52 p-2 shadow-lg mt-3 z-[1]">
+          @for (item of menuItems; track item.route) {
+            <li>
+              <a 
+                [routerLink]="item.route" 
+                routerLinkActive="active"
+                class="text-base-content"
+                (click)="closeMobileMenu()"
+              >
+                {{ item.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Overlay para cerrar el menú al hacer click fuera -->
+@if (isMobileMenuOpen()) {
+  <div 
+    class="fixed inset-0 z-40 md:hidden"
+    (click)="closeMobileMenu()"
+  ></div>
+}

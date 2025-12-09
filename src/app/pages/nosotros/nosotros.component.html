@@ -1,0 +1,82 @@
+<div class="hero min-h-screen">
+  <div class="hero-overlay"></div>
+  <div class="hero-content text-neutral-content w-full px-4 sm:px-6">
+    <div class="max-w-4xl w-full mt-20">
+      
+      <div class="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+        
+        <!-- Imagen -->
+        <div class="flex-shrink-0">
+          <img 
+            [src]="photoUrl" 
+            [alt]="photoAlt" 
+            class="rounded-2xl shadow-2xl w-48 sm:w-64 md:w-80 ring-2 sm:ring-4 ring-primary ring-offset-2 sm:ring-offset-4 ring-offset-base-100 pointer-events-none select-none"
+            draggable="false"
+            (contextmenu)="onImageRightClick($event)"
+          />
+        </div>
+
+        <!-- Contenido -->
+        <div class="space-y-4 sm:space-y-6 w-full">
+          <div>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">Sobre el Proyecto</h1>
+            <div class="text-lg sm:text-xl text-primary font-semibold">Martin Lecaros</div>
+            <div class="text-xs sm:text-sm opacity-80">Desarrollador Full Stack | Eureka 2025</div>
+          </div>
+
+          <div class="space-y-3 sm:space-y-4 text-sm sm:text-base">
+            <p>
+              Sistema integral de gestión de candidatos desarrollado con arquitectura 
+              de microservicios, diseñado para optimizar y modernizar los procesos de 
+              reclutamiento y selección de personal.
+            </p>
+
+            <p>
+              El proyecto implementa las mejores prácticas de desarrollo de software, 
+              incluyendo arquitectura escalable, <strong>tests automatizados end-to-end</strong> 
+              (Jest para frontend y Testcontainers para backend) y contenerización con Docker.
+            </p>
+          </div>
+
+          <!-- Tech badges organizados por categoría -->
+          <div class="space-y-3 sm:space-y-4">
+            <!-- Frontend -->
+            <div>
+              <div class="text-xs sm:text-sm font-semibold mb-2 opacity-80">Frontend:</div>
+              <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                <span class="badge badge-primary badge-sm sm:badge-md">Angular 20</span>
+                <span class="badge badge-primary badge-sm sm:badge-md">Tailwind CSS</span>
+                <span class="badge badge-primary badge-sm sm:badge-md">DaisyUI</span>
+                <span class="badge badge-primary badge-sm sm:badge-md">Jest</span>
+              </div>
+            </div>
+
+            <!-- Backend -->
+            <div>
+              <div class="text-xs sm:text-sm font-semibold mb-2 opacity-80">Backend:</div>
+              <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                <span class="badge badge-secondary badge-sm sm:badge-md">Spring Boot 3.5</span>
+                <span class="badge badge-secondary badge-sm sm:badge-md">MySQL</span>
+                <span class="badge badge-secondary badge-sm sm:badge-md">Testcontainers</span>
+                <span class="badge badge-secondary badge-sm sm:badge-md">JUnit</span>
+              </div>
+            </div>
+
+            <!-- Arquitectura -->
+            <div>
+              <div class="text-xs sm:text-sm font-semibold mb-2 opacity-80">Arquitectura:</div>
+              <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                <span class="badge badge-accent badge-sm sm:badge-md">Microservicios</span>
+                <span class="badge badge-accent badge-sm sm:badge-md">Eureka Server</span>
+                <span class="badge badge-accent badge-sm sm:badge-md">API Gateway</span>
+                <span class="badge badge-accent badge-sm sm:badge-md">Docker</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
