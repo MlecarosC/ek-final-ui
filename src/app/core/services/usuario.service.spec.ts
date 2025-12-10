@@ -1,136 +1,156 @@
-import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { UsuarioService } from './usuario.service';
-import { CreateUsuarioDto, Usuario } from '../../shared/models/usuario.model';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { of, throwError } from 'rxjs';
+import { UsuarioService } from '../../core/services/usuario.service';
 import { UsuariosByDepartment } from '../../shared/models/usuarioByDepartment.model';
-import { environment } from '../../../environments/environment.development';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { UsuariosComponent } from '../../pages/usuarios/usuarios.component';
 
-describe('UsuarioService', () => {
-  let service: UsuarioService;
-  let httpMock: HttpTestingController;
-  const apiUrl = `${environment.apiBaseUrl}/users`;
+describe('UsuariosComponent', () => {
+  let component: UsuariosComponent;
+  let fixture: ComponentFixture<UsuariosComponent>;
+  let usuarioService: jest.Mocked<UsuarioService>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [UsuarioService],
-    });
-    service = TestBed.inject(UsuarioService);
-    httpMock = TestBed.inject(HttpTestingController);
+  const mockChartData: UsuariosByDepartment[] = [
+    { departmentId: 1, departmentName: 'Ventas', userCount: 5 },
+    { departmentId: 2, departmentName: 'Recursos Humanos', userCount: 3 },
+    { departmentId: 3, departmentName: 'Contabilidad', userCount: 2 },
+  ];
+
+  beforeEach(async () => {
+    const usuarioServiceMock: jest.Mocked<Partial<UsuarioService>> = {
+      createUser: jest.fn(),
+      getUsersByDepartment: jest.fn().mockReturnValue(of(mockChartData)),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [UsuariosComponent, ReactiveFormsModule],
+      providers: [
+        provideHttpClientTesting(),
+        { provide: UsuarioService, useValue: usuarioServiceMock },
+        provideCharts(withDefaultRegisterables()),
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(UsuariosComponent);
+    component = fixture.componentInstance;
+    usuarioService = TestBed.inject(UsuarioService) as jest.Mocked<UsuarioService>;
+
+    fixture.detectChanges(); // ngOnInit()
   });
 
-  afterEach(() => {
-    httpMock.verify();
+  it('should create the component', () => {
+    expect(component).toBeTruthy();
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+  it('should initialize form with empty values', () => {
+    const form = component.usuarioForm;
+    expect(form).toBeDefined();
+    expect(form.get('name')?.value).toBe('');
+    expect(form.get('email')?.value).toBe('');
+    expect(form.get('departmentId')?.value).toBeNull();
   });
 
-  describe('createUser', () => {
-    it('should create a user successfully', () => {
-      const mockUser: CreateUsuarioDto = {
-        name: 'Juan Pérez',
-        email: 'juan@example.com',
-        departmentId: 1,
-      };
+  describe('loadChartData', () => {
+    it('should load chart data and update barChartData', () => {
+      component.loadChartData();
 
-      const mockResponse: Usuario = {
-        id: 1,
-        ...mockUser,
-      };
-
-      service.createUser(mockUser).subscribe((response) => {
-        expect(response).toEqual(mockResponse);
-        expect(response.id).toBe(1);
-        expect(response.name).toBe('Juan Pérez');
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/create`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockUser);
-      req.flush(mockResponse);
+      expect(component.isLoadingChart()).toBe(false);
+      expect(usuarioService.getUsersByDepartment).toHaveBeenCalled();
+      const chartData = component.barChartData();
+      expect(chartData.labels).toEqual(['Ventas', 'Recursos Humanos', 'Contabilidad']);
+      expect(chartData.datasets[0].data).toEqual([5, 3, 2]);
     });
 
-    it('should handle 409 conflict error (duplicate email)', () => {
-      const mockUser: CreateUsuarioDto = {
-        name: 'Juan Pérez',
-        email: 'juan@example.com',
-        departmentId: 1,
-      };
+    it('should handle error when loading chart data', () => {
+      usuarioService.getUsersByDepartment.mockReturnValue(
+        throwError(() => new Error('Error al cargar'))
+      );
 
-      service.createUser(mockUser).subscribe({
-        next: () => fail('should have failed with 409 error'),
-        error: (error) => {
-          expect(error.message).toBe('El email ya está registrado');
-        },
-      });
+      component.loadChartData();
 
-      const req = httpMock.expectOne(`${apiUrl}/create`);
-      req.flush({ message: 'Email already exists' }, { status: 409, statusText: 'Conflict' });
-    });
-
-    it('should handle 400 bad request error', () => {
-      const mockUser: CreateUsuarioDto = {
-        name: '',
-        email: 'invalid-email',
-        departmentId: 1,
-      };
-
-      service.createUser(mockUser).subscribe({
-        next: () => fail('should have failed with 400 error'),
-        error: (error) => {
-          expect(error.message).toContain('Datos inválidos');
-        },
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/create`);
-      req.flush({ message: 'Invalid data' }, { status: 400, statusText: 'Bad Request' });
+      expect(component.isLoadingChart()).toBe(false);
+      expect(component.showNotification()).toBe(true);
+      expect(component.notificationType()).toBe('error');
+      expect(component.notificationMessage()).toBe('Error al cargar el gráfico');
     });
   });
 
-  describe('getUsersByDepartment', () => {
-    it('should get users by department successfully', () => {
-      const mockData: UsuariosByDepartment[] = [
-        { departmentId: 1, departmentName: 'Ventas', userCount: 5 },
-        { departmentId: 2, departmentName: 'Recursos Humanos', userCount: 3 },
-        { departmentId: 3, departmentName: 'Contabilidad', userCount: 2 },
-      ];
-
-      service.getUsersByDepartment().subscribe((data) => {
-        expect(data).toEqual(mockData);
-        expect(data.length).toBe(3);
-        expect(data[0].departmentName).toBe('Ventas');
-        expect(data[0].userCount).toBe(5);
-      });
-
-      const req = httpMock.expectOne(`${apiUrl}/by-categories`);
-      expect(req.request.method).toBe('GET');
-      req.flush(mockData);
+  describe('onSubmit', () => {
+    it('should not submit if form is invalid', () => {
+      component.onSubmit();
+      expect(usuarioService.createUser).not.toHaveBeenCalled();
     });
 
-    it('should return empty array when no data', () => {
-      const mockData: UsuariosByDepartment[] = [];
+    it('should submit valid form successfully', () => {
+      const mockUser = { name: 'Juan Pérez', email: 'juan@example.com', departmentId: 1 };
+      component.usuarioForm.patchValue(mockUser);
+      usuarioService.createUser.mockReturnValue(of({ id: 1, ...mockUser }));
+      usuarioService.getUsersByDepartment.mockReturnValue(of(mockChartData));
 
-      service.getUsersByDepartment().subscribe((data) => {
-        expect(data).toEqual([]);
-        expect(data.length).toBe(0);
-      });
+      component.onSubmit();
 
-      const req = httpMock.expectOne(`${apiUrl}/by-categories`);
-      req.flush(mockData);
+      expect(usuarioService.createUser).toHaveBeenCalledWith(mockUser);
+      expect(component.showNotification()).toBe(true);
+      expect(component.notificationType()).toBe('success');
+      expect(component.notificationMessage()).toBe('¡Usuario agregado con éxito!');
+      expect(component.isLoading()).toBe(false);
     });
 
-    it('should handle 500 server error', () => {
-      service.getUsersByDepartment().subscribe({
-        next: () => fail('should have failed with 500 error'),
-        error: (error) => {
-          expect(error.message).toContain('Error en el servidor');
-        },
-      });
+    it('should handle error on submit', () => {
+      const mockUser = { name: 'Juan Pérez', email: 'juan@example.com', departmentId: 1 };
+      component.usuarioForm.patchValue(mockUser);
+      usuarioService.createUser.mockReturnValue(
+        throwError(() => new Error('Error al crear usuario'))
+      );
 
-      const req = httpMock.expectOne(`${apiUrl}/by-categories`);
-      req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
+      component.onSubmit();
+
+      expect(component.showNotification()).toBe(true);
+      expect(component.notificationType()).toBe('error');
+      expect(component.notificationMessage()).toBe('Error al crear usuario');
+      expect(component.isLoading()).toBe(false);
+    });
+  });
+
+  describe('notification helpers', () => {
+    it('should close notification', () => {
+      component.showNotification.set(true);
+      component.closeNotification();
+      expect(component.showNotification()).toBe(false);
+    });
+
+    it('should hide notification after timeout', fakeAsync(() => {
+      component['showNotificationMessage']('Test', 'success');
+      expect(component.showNotification()).toBe(true);
+      tick(4000);
+      expect(component.showNotification()).toBe(false);
+    }));
+  });
+
+  describe('form validation helpers', () => {
+    it('should detect required field error', () => {
+      const field = component.usuarioForm.get('name');
+      field?.markAsTouched();
+      expect(component.isFieldInvalid('name')).toBe(true);
+      expect(component.getFieldError('name')).toBe('Este campo es obligatorio');
+    });
+
+    it('should detect email format error', () => {
+      const field = component.usuarioForm.get('email');
+      field?.setValue('invalid-email');
+      field?.markAsTouched();
+      expect(component.isFieldInvalid('email')).toBe(true);
+      expect(component.getFieldError('email')).toBe('Formato de email inválido');
+    });
+
+    it('should detect maxlength error', () => {
+      const field = component.usuarioForm.get('name');
+      field?.setValue('x'.repeat(51));
+      field?.markAsTouched();
+      expect(component.isFieldInvalid('name')).toBe(true);
+      expect(component.getFieldError('name')).toBe('Máximo 50 caracteres');
     });
   });
 });

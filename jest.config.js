@@ -1,5 +1,6 @@
 module.exports = {
   preset: 'jest-preset-angular',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   collectCoverage: true,
@@ -23,6 +24,8 @@ module.exports = {
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
+  transformIgnorePatterns: [
+      'node_modules/(?!.*\\.mjs$|lodash-es|chart.js|ng2-charts)'
+    ],
   testMatch: ['**/*.spec.ts'],
 };

@@ -1,3 +1,4 @@
+import 'zone.js';
 import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 
 // Setup de Zone.js
@@ -24,7 +25,7 @@ Object.defineProperty(window, 'scrollTo', {
   value: jest.fn(),
 });
 
-// Mock de window.getComputedStyle (para DaisyUI/Tailwind)
+// Mock de getComputedStyle
 Object.defineProperty(window, 'getComputedStyle', {
   value: () => ({
     getPropertyValue: () => '',
