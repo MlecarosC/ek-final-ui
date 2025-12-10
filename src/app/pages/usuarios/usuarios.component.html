@@ -1,0 +1,163 @@
+<div class="min-h-screen flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl w-full">
+    
+    <!-- Notificación Toast -->
+    @if (showNotification()) {
+      <div class="toast toast-top toast-end z-50">
+        <div 
+          [class]="notificationType() === 'success' ? 'alert alert-success' : 'alert alert-error'"
+          class="shadow-lg"
+        >
+          <div class="flex items-center gap-2">
+            @if (notificationType() === 'success') {
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            <span>{{ notificationMessage() }}</span>
+            <button 
+              class="btn btn-ghost btn-sm btn-circle"
+              (click)="closeNotification()"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Título -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+        Gestión de Usuarios
+      </h1>
+      <p class="text-white/80 text-sm md:text-base">
+        Registra nuevos usuarios y visualiza la distribución por departamento
+      </p>
+    </div>
+
+    <!-- Grid Layout - Formulario más angosto -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      
+      <!-- Formulario de Usuario -->
+      <div class="lg:col-span-2 card bg-base-100 shadow-xl h-full">
+        <div class="card-body p-6">
+          <h2 class="card-title text-xl mb-4">Agregar Usuario</h2>
+          
+          <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
+            
+            <!-- Nombre -->
+            <div class="form-control w-full mb-3">
+              <label class="label py-1">
+                <span class="label-text font-semibold text-sm">Nombre completo</span>
+                <span class="label-text-alt text-error">*</span>
+              </label>
+              <input 
+                type="text" 
+                placeholder="Ej: Juan Pérez"
+                formControlName="name"
+                [class.input-error]="isFieldInvalid('name')"
+                class="input input-bordered input-sm w-full"
+              />
+              @if (isFieldInvalid('name')) {
+                <label class="label py-1">
+                  <span class="label-text-alt text-error text-xs">{{ getFieldError('name') }}</span>
+                </label>
+              }
+            </div>
+
+            <!-- Email -->
+            <div class="form-control w-full mb-3">
+              <label class="label py-1">
+                <span class="label-text font-semibold text-sm">Email</span>
+                <span class="label-text-alt text-error">*</span>
+              </label>
+              <input 
+                type="email" 
+                placeholder="Ej: juan.perez@example.com"
+                formControlName="email"
+                [class.input-error]="isFieldInvalid('email')"
+                class="input input-bordered input-sm w-full"
+              />
+              @if (isFieldInvalid('email')) {
+                <label class="label py-1">
+                  <span class="label-text-alt text-error text-xs">{{ getFieldError('email') }}</span>
+                </label>
+              }
+            </div>
+
+            <!-- Departamento -->
+            <div class="form-control w-full mb-4">
+              <label class="label py-1">
+                <span class="label-text font-semibold text-sm">Departamento</span>
+                <span class="label-text-alt text-error">*</span>
+              </label>
+              <select 
+                formControlName="departmentId"
+                [class.select-error]="isFieldInvalid('departmentId')"
+                class="select select-bordered select-sm w-full"
+              >
+                <option [value]="null" disabled selected>Selecciona un departamento</option>
+                @for (dept of departamentos; track dept.id) {
+                  <option [value]="dept.id">{{ dept.name }}</option>
+                }
+              </select>
+              @if (isFieldInvalid('departmentId')) {
+                <label class="label py-1">
+                  <span class="label-text-alt text-error text-xs">{{ getFieldError('departmentId') }}</span>
+                </label>
+              }
+            </div>
+
+            <!-- Botón Submit -->
+            <div class="card-actions justify-end mt-2">
+              <button 
+                type="submit"
+                [disabled]="isLoading()"
+                class="btn btn-primary btn-sm w-full"
+              >
+                @if (isLoading()) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                  Guardando...
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  Agregar Usuario
+                }
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Gráfico - 3 columnas (más ancho) -->
+      <div class="lg:col-span-3 card bg-base-100 shadow-xl h-fit">
+        <div class="card-body p-6">
+          <h2 class="card-title text-xl mb-4">Distribución por Departamento</h2>
+          
+          @if (isLoadingChart()) {
+            <div class="flex items-center justify-center h-80">
+              <span class="loading loading-spinner loading-lg text-primary"></span>
+            </div>
+          } @else {
+            <div class="h-80">
+              <canvas 
+                baseChart
+                [data]="barChartData()"
+                [options]="barChartOptions"
+                type="bar"
+              ></canvas>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
